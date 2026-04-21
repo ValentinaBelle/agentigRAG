@@ -24,9 +24,10 @@ def get_router_query_engine(file_path: str, llm=None, embed_model=None, book=Non
     splitter = SentenceSplitter(chunk_size=1024, chunk_overlap=200)
     nodes = splitter.get_nodes_from_documents(documents)
 
-  # Общий смысл текста
+    # Общий обзор документа
     summary_index = SummaryIndex(nodes)
-    # Конкретный вопрос по тексту
+    
+    # Поиск конкретной информации
     vector_index = VectorStoreIndex(nodes, embed_model=embed_model)
 
     summary_query_engine = summary_index.as_query_engine(
@@ -41,15 +42,38 @@ def get_router_query_engine(file_path: str, llm=None, embed_model=None, book=Non
     summary_tool = QueryEngineTool.from_defaults(
         query_engine=summary_query_engine,
         description=(
-            "Полезен для обобщения информации документа"
+            "Используйте ТОЛЬКО для общего обзора документа"
         ),
     )
 
     vector_tool = QueryEngineTool.from_defaults(
         query_engine=vector_query_engine,
         description=(
-            "Полезен для выделения запрашиваемой информации документа"
+            "Используйте для выделения запрашиваемой информации документа"
         ),
+    )
+def vector_query_with_pages(query: str, page_numbers=None):
+        # Фильтры по страницам
+        page_numbers = page_numbers or []
+        if page_numbers:
+            metadata_dicts = [{"key": "page_label", "value": p} for p in page_numbers]
+            filters = MetadataFilters.from_dicts(metadata_dicts, condition=FilterCondition.OR)
+            qe = vector_index.as_query_engine(
+                similarity_top_k=3,
+                filters=filters,
+                response_mode="compact"
+            )
+        else:
+            qe = vector_index.as_query_engine(
+                similarity_top_k=3, 
+                response_mode="compact"
+            )
+        return qe.query(query)
+    
+    vector_advanced_tool = FunctionTool.from_defaults(
+        name="vector_page_search",
+        fn=vector_query_with_pages,
+        description="Используйте для точного поиска по страницам"
     )
 
 # LLM селектор, который на выходе выдает JSON для парсинга => вызывает summary_tool()=>Возвращает ответ
@@ -58,12 +82,21 @@ def get_router_query_engine(file_path: str, llm=None, embed_model=None, book=Non
         query_engine_tools=[
             summary_tool,
             vector_tool,
+            vector_advanced_tool
         ],
         verbose=True
     )
     return query_engine
 
+# тестируем
 if __name__ == "__main__":
-    engine = get_router_query_engine("book.pdf")
-    response = engine.query("Какой общий смысл этого документа?") # например
-    print(response)
+    pdf_files = []
+    all_files = os.listdir(".")  # ['script.py', 'book.pdf', ...]
+    for f in all_files:
+        if f.endswith('.pdf'):  # проверка
+            pdf_files.append(f)  # добавляем
+    if pdf_files:
+        engine = get_router_query_engine(pdf_files[0])
+        print("✅ Работаем с:", pdf_files[0])
+    else:
+        print("❌ Добавьте PDF!")
