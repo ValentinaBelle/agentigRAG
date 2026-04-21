@@ -53,7 +53,7 @@ def get_router_query_engine(file_path: str, llm=None, embed_model=None, book=Non
             "Используйте для выделения запрашиваемой информации документа"
         ),
     )
-def vector_query_with_pages(query: str, page_numbers=None):
+    def vector_query_with_pages(query: str, page_numbers=None):
         # Фильтры по страницам
         page_numbers = page_numbers or []
         if page_numbers:
