@@ -97,6 +97,7 @@ if __name__ == "__main__":
     for f in all_files:
         if f.endswith('.pdf'):  # проверка
             pdf_files.append(f)  # добавляем
+            
     if pdf_files:
         engine = get_router_query_engine(pdf_files[0])
         if pdf_files:
