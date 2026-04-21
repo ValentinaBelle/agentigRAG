@@ -99,4 +99,8 @@ if __name__ == "__main__":
             pdf_files.append(f)  # добавляем
     if pdf_files:
         engine = get_router_query_engine(pdf_files[0])
-        return query_engine
+        if pdf_files:
+            engine = get_router_query_engine(pdf_files[0])
+            print("✅ Работаем с:", pdf_files[0])
+        else:
+            print("❌ Добавьте PDF!")
