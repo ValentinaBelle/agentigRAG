@@ -7,7 +7,8 @@ from llama_index.core import SummaryIndex, VectorStoreIndex
 from llama_index.core.tools import QueryEngineTool
 from llama_index.core.query_engine.router_query_engine import RouterQueryEngine
 from llama_index.core.selectors import LLMSingleSelector
-
+from llama_index.core.schema import MetadataFilters, FilterCondition
+from llama_index.core.tools import FunctionTool
 
 def get_router_query_engine(file_path: str, llm=None, embed_model=None, book=None):
     # Создаем router
@@ -97,6 +98,4 @@ if __name__ == "__main__":
             pdf_files.append(f)  # добавляем
     if pdf_files:
         engine = get_router_query_engine(pdf_files[0])
-        print("✅ Работаем с:", pdf_files[0])
-    else:
-        print("❌ Добавьте PDF!")
+        return query_engine
