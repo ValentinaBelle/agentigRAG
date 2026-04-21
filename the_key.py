@@ -6,5 +6,5 @@ def load_env():
 
 def get_openai_key():
     load_env()
-    openai_key = os.getenv('your_key)
+    openai_key = os.getenv('your_key')
     return openai_key
